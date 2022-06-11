@@ -50,7 +50,7 @@ if __name__ == "__main__":
         waveform = np.frombuffer(waveform, dtype=np.int16)
 
     # 分析する時刻をサンプル番号に変換
-    target_index = np.int(target_time * sampling_frequency)
+    target_index = int(target_time * sampling_frequency)
 
     # FFTを実施する区間分の波形データを取り出す
     frame = waveform[target_index: 

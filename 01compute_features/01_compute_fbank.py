@@ -285,7 +285,6 @@ def make_features(dataset):
                        high_frequency=high_frequency, 
                        dither=dither)
 
-    
     # 各wavファイルのリストと特徴量の出力先
     wav_scp = Path('../data/label') / dataset / 'wav.scp'
     assert (wav_scp).exists()

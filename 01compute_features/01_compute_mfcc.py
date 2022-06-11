@@ -14,6 +14,8 @@ import numpy as np
 import os
 import sys
 
+from pathlib import Path
+
 class FeatureExtractor():
     ''' 特徴量(FBANK, MFCC)を抽出するクラス
     sample_frequency: 入力波形のサンプリング周波数 [Hz]
@@ -249,24 +251,11 @@ class FeatureExtractor():
 
         return mfcc
 
-#
-# メイン関数
-#
-if __name__ == "__main__":
-    
+def make_features(dataset):
+
     #
     # 設定ここから
     #
-
-    # 各wavファイルのリストと特徴量の出力先
-    train_small_wav_scp = '../data/label/train_small/wav.scp'
-    train_small_out_dir = './mfcc/train_small'
-    train_large_wav_scp = '../data/label/train_large/wav.scp'
-    train_large_out_dir = './mfcc/train_large'
-    dev_wav_scp = '../data/label/dev/wav.scp'
-    dev_out_dir = './mfcc/dev'
-    test_wav_scp = '../data/label/test/wav.scp'
-    test_out_dir = './mfcc/test'
 
     # サンプリング周波数 [Hz]
     sample_frequency = 16000
@@ -299,86 +288,87 @@ if __name__ == "__main__":
                        high_frequency=high_frequency, 
                        dither=dither)
 
-    # wavファイルリストと出力先をリストにする
-    wav_scp_list = [train_small_wav_scp, 
-                    train_large_wav_scp, 
-                    dev_wav_scp, 
-                    test_wav_scp]
-    out_dir_list = [train_small_out_dir, 
-                    train_large_out_dir, 
-                    dev_out_dir, 
-                    test_out_dir]
+    # 各wavファイルのリストと特徴量の出力先
+    wav_scp = Path('../data/label') / dataset / 'wav.scp'
+    assert (wav_scp).exists()
+    out_dir = Path('./mfcc') / dataset
 
-    # 各セットについて処理を実行する
-    for (wav_scp, out_dir) in zip(wav_scp_list, out_dir_list):
-        print('Input wav_scp: %s' % (wav_scp))
-        print('Output directory: %s' % (out_dir))
+    print('Input wav_scp: %s' % (wav_scp))
+    print('Output directory: %s' % (out_dir))
 
-        # 特徴量ファイルのパス，フレーム数，
-        # 次元数を記したリスト
-        feat_scp = os.path.join(out_dir, 'feats.scp')
+    # 特徴量ファイルのパス，フレーム数，
+    # 次元数を記したリスト
+    feat_scp = out_dir / 'feats.scp'
 
-        # 出力ディレクトリが存在しない場合は作成する
-        os.makedirs(out_dir, exist_ok=True)
+    # 出力ディレクトリが存在しない場合は作成する
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-        # wavリストを読み込みモード、
-        # 特徴量リストを書き込みモードで開く
-        with open(wav_scp, mode='r') as file_wav, \
-                open(feat_scp, mode='w') as file_feat:
-            # wavリストを1行ずつ読み込む
-            for line in file_wav:
-                # 各行には，発話IDとwavファイルのパスが
-                # スペース区切りで記載されているので，
-                # split関数を使ってスペース区切りの行を
-                # リスト型の変数に変換する
-                parts = line.split()
-                # 0番目が発話ID
-                utterance_id = parts[0]
-                # 1番目がwavファイルのパス
-                wav_path = parts[1]
+    # wavリストを読み込みモード、
+    # 特徴量リストを書き込みモードで開く
+    with open(wav_scp, mode='r') as file_wav, \
+            open(feat_scp, mode='w') as file_feat:
+        # wavリストを1行ずつ読み込む
+        for line in file_wav:
+            # 各行には，発話IDとwavファイルのパスが
+            # スペース区切りで記載されているので，
+            # split関数を使ってスペース区切りの行を
+            # リスト型の変数に変換する
+            parts = line.split()
+            # 0番目が発話ID
+            utterance_id = parts[0]
+            # 1番目がwavファイルのパス
+            wav_path = parts[1]
+            
+            # wavファイルを読み込み，特徴量を計算する
+            with wave.open(wav_path) as wav:
+                # サンプリング周波数のチェック
+                if wav.getframerate() != sample_frequency:
+                    sys.stderr.write('The expected \
+                        sampling rate is 16000.\n')
+                    exit(1)
+                # wavファイルが1チャネル(モノラル)
+                # データであることをチェック
+                if wav.getnchannels() != 1:
+                    sys.stderr.write('This program \
+                        supports monaural wav file only.\n')
+                    exit(1)
                 
-                # wavファイルを読み込み，特徴量を計算する
-                with wave.open(wav_path) as wav:
-                    # サンプリング周波数のチェック
-                    if wav.getframerate() != sample_frequency:
-                        sys.stderr.write('The expected \
-                            sampling rate is 16000.\n')
-                        exit(1)
-                    # wavファイルが1チャネル(モノラル)
-                    # データであることをチェック
-                    if wav.getnchannels() != 1:
-                        sys.stderr.write('This program \
-                            supports monaural wav file only.\n')
-                        exit(1)
-                    
-                    # wavデータのサンプル数
-                    num_samples = wav.getnframes()
+                # wavデータのサンプル数
+                num_samples = wav.getnframes()
 
-                    # wavデータを読み込む
-                    waveform = wav.readframes(num_samples)
+                # wavデータを読み込む
+                waveform = wav.readframes(num_samples)
 
-                    # 読み込んだデータはバイナリ値
-                    # (16bit integer)なので，数値(整数)に変換する
-                    waveform = np.frombuffer(waveform, dtype=np.int16)
-                    
-                    # MFCCを計算する
-                    mfcc = feat_extractor.ComputeMFCC(waveform)
+                # 読み込んだデータはバイナリ値
+                # (16bit integer)なので，数値(整数)に変換する
+                waveform = np.frombuffer(waveform, dtype=np.int16)
+                
+                # MFCCを計算する
+                mfcc = feat_extractor.ComputeMFCC(waveform)
 
-                # 特徴量のフレーム数と次元数を取得
-                (num_frames, num_dims) = np.shape(mfcc)
+            # 特徴量のフレーム数と次元数を取得
+            (num_frames, num_dims) = np.shape(mfcc)
 
-                # 特徴量ファイルの名前(splitextで拡張子を取り除いている)
-                out_file = os.path.splitext(os.path.basename(wav_path))[0]
-                out_file = os.path.join(os.path.abspath(out_dir), 
-                                        out_file + '.bin')
+            # 特徴量ファイルの名前(splitextで拡張子を取り除いている)
+            out_file = os.path.splitext(os.path.basename(wav_path))[0]
+            out_file = os.path.join(os.path.abspath(out_dir), 
+                                    out_file + '.bin')
 
-                # データをfloat32形式に変換
-                mfcc = mfcc.astype(np.float32)
+            # データをfloat32形式に変換
+            mfcc = mfcc.astype(np.float32)
 
-                # データをファイルに出力
-                mfcc.tofile(out_file)
-                # 発話ID，特徴量ファイルのパス，フレーム数，
-                # 次元数を特徴量リストに書き込む
-                file_feat.write("%s %s %d %d\n" %
-                    (utterance_id, out_file, num_frames, num_dims))
+            # データをファイルに出力
+            mfcc.tofile(out_file)
+            # 発話ID，特徴量ファイルのパス，フレーム数，
+            # 次元数を特徴量リストに書き込む
+            file_feat.write("%s %s %d %d\n" %
+                (utterance_id, out_file, num_frames, num_dims))
 
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    if len(args) == 0:
+        print('Specify dataset:')
+        print('  train_small train_large dev test')
+    else:
+        for dataset in args:
+            make_features(dataset)

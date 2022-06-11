@@ -46,7 +46,7 @@ if __name__ == "__main__":
         waveform = np.frombuffer(waveform, dtype=np.int16)
 
     # 分析する時刻をサンプル番号に変換
-    target_index = np.int(target_time * sampling_frequency)
+    target_index = int(target_time * sampling_frequency)
 
     # FFTを実施する区間分の波形データを取り出す
     frame = waveform[target_index: target_index + fft_size]
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     absolute = np.abs(spectrum)
 
     # 振幅スペクトルは左右対称なので，左半分までのみを用いる
-    absolute = absolute[:np.int(fft_size/2) + 1]
+    absolute = absolute[:int(fft_size/2) + 1]
 
     # 対数を取り，対数振幅スペクトルを計算
     log_absolute = np.log(absolute + 1E-7)
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     plt.subplot(2, 1, 2)
 
     # 横軸(周波数軸)を作成する
-    freq_axis = np.arange(np.int(fft_size/2)+1) \
+    freq_axis = np.arange(int(fft_size/2)+1) \
                 * sampling_frequency / fft_size
     
     # 対数振幅スペクトルをプロット

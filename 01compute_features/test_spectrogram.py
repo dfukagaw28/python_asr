@@ -15,6 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import sys
+import click
 
 
 class Waveform:
@@ -144,17 +145,24 @@ def _make_spectrogram(waveform):
 #
 # メイン関数
 #
-def test_spectrogram(wav_file, out_plot=None):
-    """
-    wavファイルを開いて波形をプロットします
-
-    Parameters
-    ----------
-    wav_file : str
-        開くwavファイル
-    out_plot : str
-        波形のプロットを出力するファイル(pngファイル)
-    """
+@click.command()
+@click.argument('wav_file',
+    help='入力 wav ファイル',
+    default=None,
+)
+@click.argument('out_plot',
+    help='出力先のファイル名',
+    default=None,
+)
+@click.option('plot_waveform',
+    type=bool,
+    help='時間波形を出力に含めるかどうか',
+    default=True,
+)
+def test_spectrogram(wav_file, out_plot, plot_waveform):
+    if wav_file is None:
+        wav_file = '../data/wav/BASIC5000_0001.wav'
+        out_plot = './spectrogram.png'
 
     # wavファイルを開き、以降の処理を行う
     waveform = Waveform(wav_file)
@@ -187,17 +195,4 @@ def test_spectrogram(wav_file, out_plot=None):
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    if len(args) == 2:
-        wav_file, out_plot = args
-    elif len(args) == 1:
-        wav_file = args[0]
-        out_plot = None
-    elif len(args) == 0:
-        wav_file = '../data/wav/BASIC5000_0001.wav'
-        out_plot = './spectrogram.png'
-    else:
-        print('Usage:')
-        print(f'    {sys.argv[0]} [wav_file [out_plot]]')
-        sys.exit()
-    test_spectrogram(wav_file, out_plot)
+    test_spectrogram()

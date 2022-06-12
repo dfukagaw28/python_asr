@@ -86,6 +86,11 @@ class Spectrogram:
 
 
 def _make_spectrogram(waveform):
+    # フレームサイズ [ミリ秒]
+    frame_size = 25
+    # フレームシフト [ミリ秒]
+    frame_shift = 10
+
     # フレームサイズをミリ秒からサンプル数に変換
     frame_size = int(waveform.sample_frequency \
                      * frame_size * 0.001)
@@ -150,11 +155,6 @@ def test_spectrogram(wav_file, out_plot=None):
     out_plot : str
         波形のプロットを出力するファイル(pngファイル)
     """
-
-    # フレームサイズ [ミリ秒]
-    frame_size = 25
-    # フレームシフト [ミリ秒]
-    frame_shift = 10
 
     # wavファイルを開き、以降の処理を行う
     waveform = Waveform(wav_file)

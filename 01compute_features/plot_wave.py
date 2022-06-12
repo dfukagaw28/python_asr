@@ -76,7 +76,7 @@ def plot_wave(wav_file, out_plot=None):
     # 横軸の表示領域を0から波形終了時刻に制限
     plt.xlim([0, num_samples / sampling_frequency])
 
-    # プロットを保存する
+    # プロットする
     if out_plot is None:
         plt.show()
     else:
@@ -95,4 +95,5 @@ if __name__ == "__main__":
     else:
         print('Usage:')
         print(f'    {sys.argv[0]} [wav_file [out_plot]]')
+        sys.exit()
     plot_wave(wav_file, out_plot)

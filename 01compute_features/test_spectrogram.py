@@ -117,8 +117,8 @@ def _make_spectrogram(waveform):
         start_index = frame_idx * frame_shift
 
         # 1フレーム分の波形を抽出
-        frame = waveform[start_index : \
-                         start_index + frame_size].copy()
+        frame = waveform.data[start_index : \
+                              start_index + frame_size].copy()
 
         # ハミング窓を掛ける
         frame = frame * np.hamming(frame_size)

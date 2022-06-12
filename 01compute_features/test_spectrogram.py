@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import sys
-import click
+import pathlib
 
 
 class Waveform:
@@ -145,22 +145,7 @@ def _make_spectrogram(waveform):
 #
 # メイン関数
 #
-@click.command()
-@click.argument('wav_file',
-    help='入力 wav ファイル',
-    default=None,
-)
-@click.argument('out_plot',
-    help='出力先のファイル名',
-    default=None,
-)
-@click.option('--plot_waveform',
-    is_flag=True,
-    show_default=True,
-    default=True,
-    help='時間波形を出力に含めるかどうか',
-)
-def test_spectrogram(wav_file, out_plot, plot_waveform):
+def test_spectrogram(wav_file=None, out_plot=None, no_wave=False):
     if wav_file is None:
         wav_file = '../data/wav/BASIC5000_0001.wav'
         out_plot = './spectrogram.png'
@@ -174,26 +159,33 @@ def test_spectrogram(wav_file, out_plot, plot_waveform):
     #
     # 時間波形とスペクトログラムをプロット
     #
+    if no_wave:
+        plt.figure(figsize=(10,4))
+        spectrogram.plot(plt)
+    else:
+        plt.figure(figsize=(10,10))
 
-    # プロットの描画領域を作成
-    plt.figure(figsize=(10,10))
+        plt.subplot(2, 1, 1)
+        waveform.plot(plt)
 
-    # 描画領域を縦に2分割し、
-    # 上側に時間波形をプロットする
-    plt.subplot(2, 1, 1)
-    waveform.plot(plt)
-
-    # 2分割された描画領域の下側に
-    # スペクトログラムをプロットする
-    plt.subplot(2, 1, 2)
-    spectrogram.plot(plt)
+        plt.subplot(2, 1, 2)
+        spectrogram.plot(plt)
 
     # プロットする
     if out_plot is None:
         plt.show()
     else:
         plt.savefig(out_plot)
-
+        plt.clf()
+        plt.close()
 
 if __name__ == "__main__":
-    test_spectrogram()
+    import argparse
+
+    parser = argparse.ArgumentParser(description='短時間フーリエ変換を用いて音声のスペクトログラムを作成します')
+    parser.add_argument('--wav_file', type=pathlib.Path, help='入力wavファイル')
+    parser.add_argument('--out', type=pathlib.Path, help='出力先ファイル')
+    parser.add_argument('--no_wave', type=bool, default=False, help='時間波形をプロットしない')
+    args = parser.parse_args()
+
+    test_spectrogram(args.wav_file, args.out, args.no_wave)

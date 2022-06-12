@@ -21,7 +21,7 @@ import pathlib
 class Waveform:
     def __init__(self, wav_file):
         # wavファイルを開き、以降の処理を行う
-        with wave.open(wav_file) as wav:
+        with wave.open(str(wav_file)) as wav:
             # サンプリング周波数 [Hz] を取得
             sample_frequency = wav.getframerate()
 
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='短時間フーリエ変換を用いて音声のスペクトログラムを作成します')
     parser.add_argument('--wav_file', type=pathlib.Path, help='入力wavファイル')
     parser.add_argument('--out', type=pathlib.Path, help='出力先ファイル')
-    parser.add_argument('--no_wave', type=bool, default=False, help='時間波形をプロットしない')
+    parser.add_argument('--no_wave', action='store_true', default=False, help='時間波形をプロットしない')
     args = parser.parse_args()
 
     test_spectrogram(args.wav_file, args.out, args.no_wave)

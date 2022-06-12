@@ -154,10 +154,11 @@ def _make_spectrogram(waveform):
     help='出力先のファイル名',
     default=None,
 )
-@click.option('plot_waveform',
-    type=bool,
-    help='時間波形を出力に含めるかどうか',
+@click.option('--plot_waveform',
+    is_flag=True,
+    show_default=True,
     default=True,
+    help='時間波形を出力に含めるかどうか',
 )
 def test_spectrogram(wav_file, out_plot, plot_waveform):
     if wav_file is None:
